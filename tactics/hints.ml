@@ -1006,7 +1006,7 @@ let make_extern pri pat tacast =
   (hdconstr,
    { pri = pri;
      pat = Option.map (fun p -> SyntacticPattern p) pat;
-     name = None;
+     name = hdconstr;
      db = None;
      secvars = Id.Pred.empty; (* Approximation *)
      code = with_uid (Extern (pat, tacast)) })
