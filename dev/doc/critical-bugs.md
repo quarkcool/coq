@@ -508,7 +508,7 @@ fix.
 
 #### broken long multiplication primitive integer emulation layer on 32 bits
 
-- component: "virtual machine" (compilation to bytecode ran by a C-interpreter)
+- component: all 3 kernel conversion machines (lazy, VM, native)
 - introduced: [e43b176](https://github.com/coq/coq/commit/e43b1768d0f8399f426b92f4dfe31955daceb1a4)
 - impacted released versions: 8.10.0, 8.10.1, 8.10.2
 - impacted development branches: 8.11
@@ -595,10 +595,10 @@ For instance `α` and `__U03b1_` were the same in the native compiler.
 
 #### arbitrary code execution on arrays of floating point numbers
 
-- component: "virtual machine" (compilation to bytecode ran by a C-interpreter)
+- component: "virtual" and "native" conversion machines
 - introduced: 8.13
 - impacted released versions: 8.13.0, 8.13.1, 8.14.0
-- impacted coqchk versions: none (no virtual machine in coqchk)
+- impacted coqchk versions: none (no VM / native computation in coqchk)
 - fixed in: 8.14.1
 - found by: Melquiond
 - GH issue number: coq/coq#15070

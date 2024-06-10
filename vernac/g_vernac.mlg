@@ -353,6 +353,7 @@ GRAMMAR EXTEND Gram
          ->
          { let open UState in
          { univdecl_qualities = l0;
+           univdecl_extensible_qualities = false;
            univdecl_instance = l;
            univdecl_extensible_instance = ext;
            univdecl_constraints = fst cs;
@@ -361,7 +362,8 @@ GRAMMAR EXTEND Gram
          cs = univ_decl_constraints
          ->
          { let open UState in
-         { univdecl_qualities = []; (* TODO *)
+         { univdecl_qualities = [];
+           univdecl_extensible_qualities = false;
            univdecl_instance = l;
            univdecl_extensible_instance = ext;
            univdecl_constraints = fst cs;
@@ -388,6 +390,7 @@ GRAMMAR EXTEND Gram
          ->
          { let open UState in
          { univdecl_qualities = l0;
+           univdecl_extensible_qualities = false;
            univdecl_instance = l;
            univdecl_extensible_instance = ext;
            univdecl_constraints = fst cs;
@@ -398,6 +401,7 @@ GRAMMAR EXTEND Gram
          ->
          { let open UState in
          { univdecl_qualities = [];
+           univdecl_extensible_qualities = false;
            univdecl_instance = l;
            univdecl_extensible_instance = ext;
            univdecl_constraints = fst cs;
@@ -685,7 +689,7 @@ GRAMMAR EXTEND Gram
         { VernacSynterp (VernacImport ((Import,cats),qidl)) }
       | IDENT "Export"; cats = OPT import_categories; qidl = LIST1 filtered_import ->
         { VernacSynterp (VernacImport ((Export,cats),qidl)) }
-      | IDENT "Include"; e = module_type_inl; l = LIST0 ext_module_expr ->
+      | IDENT "Include"; e = module_type_inl; l = LIST0 ext_module_type ->
           { VernacSynterp (VernacInclude(e::l)) }
       | IDENT "Include"; "Type"; e = module_type_inl; l = LIST0 ext_module_type ->
          { warn_deprecated_include_type ~loc ();

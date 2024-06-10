@@ -423,18 +423,19 @@ let declare_constant_core ~name ~typing_flags cd =
       } in
       ConstantEntry (Entries.ParameterEntry e), not (Lib.is_modtype_strict()), ubinders, None
     | PrimitiveEntry e ->
-      let typ, ubinders, ctx = match e.prim_entry_type with
-      | None -> None, UnivNames.empty_binders, Univ.ContextSet.empty
-      | Some (typ, (univs, ubinders)) ->
-        let univ_entry, ctx = extract_monomorphic univs in
-        Some (typ, univ_entry), ubinders, ctx
+      let typ, univ_entry, ctx = match e.prim_entry_type with
+      | None ->
+        None, (UState.Monomorphic_entry Univ.ContextSet.empty, UnivNames.empty_binders), Univ.ContextSet.empty
+      | Some (typ, entry_univs) ->
+        let univ_entry, ctx = extract_monomorphic (fst entry_univs) in
+        Some (typ, univ_entry), entry_univs, ctx
       in
       let () = Global.push_context_set ~strict:true ctx in
       let e = {
         Entries.prim_entry_type = typ;
         Entries.prim_entry_content = e.prim_entry_content;
       } in
-      let ubinders = (UState.Monomorphic_entry ctx, ubinders) in
+      let ubinders = make_ubinders ctx univ_entry in
       ConstantEntry (Entries.PrimitiveEntry e), false, ubinders, None
     | SymbolEntry { symb_entry_type=typ; symb_entry_unfold_fix=un_fix; symb_entry_universes=entry_univs } ->
       let univ_entry, ctx = extract_monomorphic (fst entry_univs) in
@@ -2092,12 +2093,9 @@ end = struct
     | _ -> assert false
 
   let update_mutual_entry i entry uctx typ =
-    (* if i = 0 , we don't touch the type; this is for compat
-       but not clear it is the right thing to do.
-    *)
     { entry with
       proof_entry_body = Future.chain entry.proof_entry_body (fun ((body, uctx), eff) -> ((select_body i body, uctx), eff));
-      proof_entry_type = if i > 0 then Some (UState.nf_universes uctx typ) else entry.proof_entry_type }
+      proof_entry_type = Some (UState.nf_universes uctx typ) }
 
   let declare_possibly_mutual_definitions ~pinfo ~uctx ~entry =
     let entries = match pinfo.Proof_info.possible_guard with
@@ -2261,7 +2259,7 @@ let check_single_entry { entries; uctx } label =
   | _ ->
     CErrors.anomaly ~label Pp.(str "close_proof returned more than one proof term")
 
-let finalize_proof ~pm proof_obj proof_info =
+let finish_proof ~pm proof_obj proof_info =
   let open Proof_ending in
   match CEphemeron.default proof_info.Proof_info.proof_ending Regular with
   | Regular ->
@@ -2297,7 +2295,7 @@ let save ~pm ~proof ~opaque ~idopt =
   (* Env and sigma are just used for error printing in save_remaining_recthms *)
   let proof_obj = close_proof ~opaque ~keep_body_ucst_separate:false proof in
   let proof_info = process_idopt_for_save ~idopt proof.pinfo in
-  finalize_proof ~pm proof_obj proof_info
+  finish_proof ~pm proof_obj proof_info
 
 let save_regular ~(proof : t) ~opaque ~idopt =
   let open Proof_ending in
@@ -2325,7 +2323,7 @@ let save_lemma_admitted_delayed ~pm ~proof =
 let save_lemma_proved_delayed ~pm ~proof ~idopt =
   (* vio2vo used to call this with invalid [pinfo], now it should work fine. *)
   let pinfo = process_idopt_for_save ~idopt proof.pinfo in
-  let pm, _ = finalize_proof ~pm proof pinfo in
+  let pm, _ = finish_proof ~pm proof pinfo in
   pm
 
 end (* Proof module *)
